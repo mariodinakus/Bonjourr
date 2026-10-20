@@ -269,283 +269,201 @@ function formatDay(date: string): string {
 }
 
 export function auroraDashboard(): void {
-    if (!['http:', 'https:'].includes(location.protocol) ||
-        !document.getElementById('interface') || document.getElementById('aurora-board')) return
+    // Render INSIDE the original quotes widget. Do not add a new window, column or overlay.
+    if (!['http:', 'https:'].includes(location.protocol)) return
+    const quotesContainer = document.getElementById('quotes_container')
+    if (!quotesContainer || document.getElementById('aurora-board')) return
 
     const font = document.createElement('link')
     font.rel = 'stylesheet'
     font.href = 'https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap'
     document.head.appendChild(font)
 
-    const board = node('aside', 'aurora-mini-desk')
-    board.id = 'aurora-board'
-    board.setAttribute('aria-label', 'Aurora Mini Desk')
-    const header = node('header', 'aurora-mini-header')
-    const expand = action('', () => toggle(), 'aurora-mini-toggle')
-    expand.setAttribute('aria-controls', 'aurora-mini-content')
-    expand.setAttribute('aria-expanded', 'false')
-    expand.appendChild(node('span', 'aurora-mini-logo', '✦ AURORA'))
-    const hint = node('span', 'aurora-mini-hint')
-    expand.appendChild(hint)
-    expand.appendChild(node('span', 'aurora-mini-chevron', '⌃'))
-    header.appendChild(expand)
-    board.appendChild(header)
+    type Slide = 'quote' | 'holidays' | 'ideas' | 'news' | 'markets' | 'energy'
+    const slides: { key: Slide; label: string }[] = [
+        { key: 'quote', label: 'Γνωμικό' },
+        { key: 'holidays', label: 'Αργίες' },
+        { key: 'ideas', label: 'Vibe idea' },
+        { key: 'news', label: 'Ειδήσεις' },
+        { key: 'markets', label: 'Αγορές' },
+        { key: 'energy', label: 'Ενέργεια' },
+    ]
 
-    const content = node('div', 'aurora-mini-content')
-    content.id = 'aurora-mini-content'
-    content.hidden = true
-    const tabs = node('nav', 'aurora-mini-tabs')
-    tabs.setAttribute('aria-label', 'Ενότητες Aurora')
-    const body = node('div', 'aurora-mini-body')
-    const footer = node('footer', 'aurora-mini-footer',
-        'Δεδομένα αγοράς: ημερήσια και ενδεχομένως καθυστερημένα · όχι live.')
-    content.append(tabs, body, footer)
-    board.appendChild(content)
-    document.body.appendChild(board)
+    const info = node('div', 'aurora-inline')
+    info.id = 'aurora-board'
+    info.setAttribute('aria-live', 'off')
+    const switcher = node('nav', 'aurora-switcher')
+    switcher.setAttribute('aria-label', 'Εναλλαγή γνωμικών και ενημερώσεων')
+    quotesContainer.append(info, switcher)
+    quotesContainer.classList.add('aurora-ready')
 
-    let selected: AuroraTab = 'today'
+    let active: Slide = 'quote'
+    let currentIdea = Math.floor(dateMs(athensToday()) / 86400000) % IDEAS.length
+    let newsCursor = 0
     let data: AuroraPayload | null = null
+    let lastAttempt = 0
     let loading = false
-    let fetchedAt = 0
-    let ideaIndex = Math.floor(dateMs(athensToday()) / 86400000) % IDEAS.length
-    const tabButtons = new Map<AuroraTab, HTMLButtonElement>()
+    let interactedAt = 0
+    const buttons = new Map<Slide, HTMLButtonElement>()
+    const hasPointerHover = (): boolean => quotesContainer.matches(':hover') ||
+        quotesContainer.contains(document.activeElement)
 
-    for (const tab of TABS) {
-        const button = action(tab.label, () => select(tab.key), 'aurora-mini-tab')
-        tabButtons.set(tab.key, button)
-        tabs.appendChild(button)
+    for (const slide of slides) {
+        const button = action(slide.label, () => {
+            interactedAt = Date.now()
+            select(slide.key)
+        }, 'aurora-switch')
+        switcher.append(button)
+        buttons.set(slide.key, button)
     }
 
-    function refreshHeader(): void {
-        const next = countDowns().find((item) => !item.personal)
-        hint.textContent = next ? next.name + ' ' + countdownLabel(next.days) : 'Αργίες · Ιδέες · Νέα'
-    }
-
-    function toggle(): void {
-        const opening = content.hidden
-        content.hidden = !opening
-        expand.setAttribute('aria-expanded', String(opening))
-        if (opening) {
-            select(selected)
-        }
-    }
-
-    function select(tab: AuroraTab): void {
-        selected = tab
-        for (const [key, button] of tabButtons) {
-            const active = key === tab
-            button.classList.toggle('active', active)
-            button.setAttribute('aria-current', active ? 'page' : 'false')
+    function select(next: Slide): void {
+        active = next
+        quotesContainer.dataset.auroraView = next
+        for (const [key, button] of buttons) {
+            const selected = key === next
+            button.classList.toggle('active', selected)
+            button.setAttribute('aria-current', selected ? 'true' : 'false')
         }
         render()
-        if (['markets', 'energy', 'news'].includes(tab)) void loadFeed()
+        if (next === 'news' || next === 'markets' || next === 'energy') void load()
     }
 
-    function showCountdowns(limit: number, editor: boolean): void {
-        const upcoming = countDowns().slice(0, limit)
-        const list = node('div', 'aurora-mini-list')
-        for (const item of upcoming) {
-            const row = node('div', 'aurora-countdown')
-            row.appendChild(node('span', 'aurora-countdown-title', item.name))
-            const days = node('strong', 'aurora-countdown-days', countdownLabel(item.days))
-            row.appendChild(days)
-            row.appendChild(node('small', 'aurora-mini-meta', formatDay(item.date)))
-            if (editor && item.personal) {
-                row.appendChild(action('×', () => {
-                    saveMilestones(readMilestones().filter((entry) => !(entry.name === item.name && entry.date === item.date)))
-                    refreshHeader()
-                    render()
-                }, 'aurora-remove'))
-            }
-            list.appendChild(row)
+    function addLine(main: string, detail: string, linkUrl?: string): void {
+        const inner = node('div', 'aurora-inline-inner')
+        if (linkUrl?.startsWith('https://')) {
+            const link = document.createElement('a')
+            link.href = linkUrl
+            link.target = '_blank'
+            link.rel = 'noopener noreferrer'
+            link.className = 'aurora-inline-primary'
+            link.textContent = main
+            inner.appendChild(link)
+        } else {
+            inner.appendChild(node('strong', 'aurora-inline-primary', main))
         }
-        body.appendChild(list)
-        if (!editor) return
-        const form = document.createElement('form')
-        form.className = 'aurora-date-form'
-        const name = document.createElement('input')
-        name.type = 'text'
-        name.placeholder = 'Όνομα ημερομηνίας'
-        name.required = true
-        name.maxLength = 38
-        name.setAttribute('aria-label', 'Όνομα ημερομηνίας')
-        const date = document.createElement('input')
-        date.type = 'date'
-        date.required = true
-        date.setAttribute('aria-label', 'Ημερομηνία')
-        date.min = athensToday()
-        const save = document.createElement('button')
-        save.type = 'submit'
-        save.textContent = 'Προσθήκη'
-        form.append(name, date, save)
-        form.addEventListener('submit', (event) => {
-            event.preventDefault()
-            if (!name.value.trim() || !date.value || date.value < athensToday()) return
-            saveMilestones([...readMilestones(), { name: name.value.trim(), date: date.value }].slice(-30))
-            refreshHeader()
+        inner.appendChild(node('span', 'aurora-inline-secondary', detail))
+        info.append(inner)
+    }
+
+    function addInlineButton(label: string, callback: () => void): void {
+        info.appendChild(action(label, () => {
+            interactedAt = Date.now()
+            callback()
+        }, 'aurora-inline-action'))
+    }
+
+    function showHoliday(): void {
+        const holidays = countDowns()
+        const nearest = holidays.find((item) => !item.personal)
+        const personal = holidays.find((item) => item.personal)
+        if (nearest) {
+            addLine(
+                nearest.name + ' · ' + countdownLabel(nearest.days),
+                formatDay(nearest.date) +
+                    (personal ? '   |   ' + personal.name + ' ' + countdownLabel(personal.days) : '')
+            )
+        }
+        addInlineButton('+ Ημερομηνία', () => {
+            const label = window.prompt('Ποια προσωπική ημερομηνία θέλεις να παρακολουθείς;')
+            if (!label?.trim()) return
+            const date = window.prompt('Ημερομηνία (ΕΕΕΕ-ΜΜ-ΗΗ), π.χ. 2026-12-01')
+            if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+                !Number.isFinite(dateMs(date)) || new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) !== date ||
+                date < athensToday()) return
+            const previous = readMilestones()
+            saveMilestones([...previous, { name: label.trim().slice(0, 38), date }].slice(-30))
             render()
         })
-        body.appendChild(form)
-        body.appendChild(node('p', 'aurora-mini-meta', 'Οι προσωπικές ημερομηνίες αποθηκεύονται μόνο σε αυτόν τον browser.'))
     }
 
     function showIdea(): void {
-        const item = IDEAS[(ideaIndex + IDEAS.length) % IDEAS.length]
-        const card = node('article', 'aurora-idea')
-        card.appendChild(node('span', 'aurora-idea-topic', item.area + ' · ' + item.difficulty))
-        card.appendChild(node('strong', 'aurora-idea-name', item.name))
-        card.appendChild(node('p', 'aurora-idea-desc', item.description))
-        const buttons = node('div', 'aurora-idea-actions')
-        buttons.appendChild(action('Άλλη ιδέα ↻', () => { ideaIndex++; render() }))
-        const favorites = readFavorites()
-        buttons.appendChild(action(favorites.includes(item.name) ? '★ Αποθηκεύτηκε' : '☆ Αποθήκευση', () => {
-            const current = readFavorites()
-            saveFavorites(current.includes(item.name)
-                ? current.filter((name) => name !== item.name)
-                : [...current, item.name])
+        const idea = IDEAS[currentIdea % IDEAS.length]
+        addLine('✦ ' + idea.name, idea.description + ' · ' + idea.difficulty)
+        addInlineButton('↻', () => {
+            currentIdea += 1
             render()
-        }))
-        const copy = action('Αντιγραφή brief', () => {
-            if (!navigator.clipboard) {
-                copy.textContent = 'Μη διαθέσιμο'
-                return
-            }
-            void navigator.clipboard.writeText(item.prompt).then(() => {
-                copy.textContent = 'Αντιγράφηκε ✓'
+        })
+        addInlineButton('Brief ↗', () => {
+            if (!navigator.clipboard) return
+            void navigator.clipboard.writeText(idea.prompt).then(() => {
+                const message = info.querySelector<HTMLElement>('.aurora-inline-secondary')
+                if (message) message.textContent = 'Το brief αντιγράφηκε — κάνε επικόλληση στο ChatGPT.'
             }).catch(() => {
-                copy.textContent = 'Μη διαθέσιμο'
+                const message = info.querySelector<HTMLElement>('.aurora-inline-secondary')
+                if (message) message.textContent = 'Δεν επιτρέπεται η αντιγραφή σε αυτόν τον browser.'
             })
         })
-        buttons.appendChild(copy)
-        card.appendChild(buttons)
-        body.appendChild(card)
-        if (selected === 'ideas') {
-            const saved = readFavorites()
-            if (saved.length) body.appendChild(node('p', 'aurora-mini-meta', 'Αποθηκευμένες ιδέες: ' + saved.join(' · ')))
-        }
     }
 
-    function showQuotes(quotes: AuroraQuote[]): void {
-        for (const item of quotes) {
-            const row = node('div', 'aurora-quote')
-            row.appendChild(node('span', 'aurora-quote-name', item.name))
-            const value = typeof item.value === 'number' && Number.isFinite(item.value)
-                ? new Intl.NumberFormat('el-GR', { maximumFractionDigits: 2 }).format(item.value) +
-                  (item.unit ? ' ' + item.unit : '')
-                : 'Μη διαθέσιμο'
-            const number = node('strong', 'aurora-quote-value', value)
-            row.appendChild(number)
-            if (typeof item.changePercent === 'number') {
-                const change = node('span', 'aurora-mini-change',
-                    (item.changePercent > 0 ? '+' : '') + item.changePercent.toFixed(2) + '%')
-                change.dataset.direction = item.changePercent > 0 ? 'up' : item.changePercent < 0 ? 'down' : 'flat'
-                row.appendChild(change)
-            }
-            row.appendChild(node('small', 'aurora-mini-meta', item.observedOn || item.error || 'Ημερομηνία μη διαθέσιμη'))
-            if (item.url?.startsWith('https://')) {
-                const link = document.createElement('a')
-                link.href = item.url
-                link.target = '_blank'
-                link.rel = 'noopener noreferrer'
-                link.textContent = 'Πηγή ↗'
-                row.appendChild(link)
-            }
-            body.appendChild(row)
-        }
-    }
-
-    function showNews(items: AuroraNews[]): void {
-        if (!items.length) {
-            body.appendChild(node('p', 'aurora-mini-meta', 'Δεν υπάρχουν διαθέσιμες ειδήσεις αυτή τη στιγμή.'))
+    function showNews(): void {
+        const articles = data?.news ?? []
+        if (!articles.length) {
+            addLine('Ειδήσεις κόσμου', loading ? 'Φόρτωση…' : 'Δεν υπάρχουν διαθέσιμες ενημερώσεις.')
             return
         }
-        for (const item of items.slice(0, 6)) {
-            if (!item.url?.startsWith('https://')) continue
-            const link = document.createElement('a')
-            link.className = 'aurora-news-link'
-            link.href = item.url
-            link.target = '_blank'
-            link.rel = 'noopener noreferrer'
-            link.appendChild(node('span', 'aurora-idea-topic', item.category))
-            link.appendChild(node('strong', 'aurora-news-title', item.title))
-            link.appendChild(node('span', 'aurora-mini-meta', item.source || 'Google News'))
-            body.appendChild(link)
+        const article = articles[newsCursor % articles.length]
+        addLine(article.title, article.category + ' · ' + (article.source || 'Google News'), article.url)
+        addInlineButton('↻', () => {
+            newsCursor += 1
+            render()
+        })
+    }
+
+    function showQuotes(quotes: AuroraQuote[], category: string): void {
+        const available = quotes.filter((entry) => typeof entry.value === 'number' && Number.isFinite(entry.value))
+        if (!available.length) {
+            addLine(category, loading ? 'Φόρτωση…' : 'Οι τελευταίες τιμές δεν είναι διαθέσιμες.')
+            return
         }
+        const text = available.slice(0, 3).map((entry) => {
+            const amount = new Intl.NumberFormat('el-GR', { maximumFractionDigits: 2 }).format(entry.value as number)
+            return entry.name + ' ' + amount
+        }).join('   ·   ')
+        const days = [...new Set(available.map((entry) => entry.observedOn).filter(Boolean))]
+        addLine(text, 'Ιστορικά δεδομένα' + (days.length ? ' · ' + days.join(', ') : '') + ' · όχι ζωντανές τιμές')
     }
 
     function render(): void {
-        body.replaceChildren()
-        if (selected === 'today') {
-            body.appendChild(node('h3', 'aurora-mini-section-title', 'Επόμενες αργίες'))
-            showCountdowns(2, false)
-            body.appendChild(node('h3', 'aurora-mini-section-title', 'Vibe ιδέα της ημέρας'))
-            showIdea()
-            return
-        }
-        if (selected === 'holidays') {
-            body.appendChild(node('h3', 'aurora-mini-section-title', 'Ημερομηνίες & αντίστροφη μέτρηση'))
-            showCountdowns(8, true)
-            return
-        }
-        if (selected === 'ideas') {
-            body.appendChild(node('h3', 'aurora-mini-section-title', 'Vibe Coding Lab'))
-            showIdea()
-            return
-        }
-        if (!data) {
-            body.appendChild(node('p', 'aurora-mini-meta', loading ? 'Ενημέρωση πηγών…' : 'Φόρτωση δεδομένων…'))
-            return
-        }
-        if (selected === 'markets') showQuotes(data.markets)
-        if (selected === 'energy') showQuotes([...data.energy, data.electricity || {
-            name: 'Ελληνική αγορά ηλεκτρισμού', value: null, error: 'Πηγή μη διαθέσιμη',
-        }])
-        if (selected === 'news') showNews(data.news)
-        const refresh = action('Ανανέωση ↻', () => { void loadFeed(true) })
-        refresh.classList.add('aurora-refresh')
-        body.appendChild(refresh)
-        if (data.generatedAt) {
-            const generated = new Date(data.generatedAt)
-            if (!Number.isNaN(generated.getTime())) {
-                body.appendChild(node('p', 'aurora-mini-meta', 'Έλεγχος πηγών: ' +
-                    new Intl.DateTimeFormat('el-GR', { hour: '2-digit', minute: '2-digit' }).format(generated)))
-            }
-        }
+        info.replaceChildren()
+        if (active === 'quote') return
+        if (active === 'holidays') showHoliday()
+        if (active === 'ideas') showIdea()
+        if (active === 'news') showNews()
+        if (active === 'markets') showQuotes(data?.markets ?? [], 'Δείκτες')
+        if (active === 'energy') showQuotes([...(data?.energy ?? []), ...(data?.electricity ? [data.electricity] : [])], 'Ενέργεια')
     }
 
-    async function loadFeed(force = false): Promise<void> {
-        if (loading || (!force && data && Date.now() - fetchedAt < 15 * 60 * 1000)) return
+    async function load(): Promise<void> {
+        if (loading || (lastAttempt && Date.now() - lastAttempt < 15 * 60 * 1000)) return
+        lastAttempt = Date.now()
         loading = true
-        if (!data) render()
+        render()
         try {
             const response = await fetch('/api/aurora', {
-                signal: AbortSignal.timeout(16000),
                 cache: 'no-store',
+                signal: AbortSignal.timeout(15000),
             })
-            if (!response.ok) throw new Error('HTTP ' + response.status)
-            const result = (await response.json()) as AuroraPayload
-            if (!Array.isArray(result.news) || !Array.isArray(result.markets) ||
-                !Array.isArray(result.energy)) throw new Error('Invalid data')
-            data = result
-            fetchedAt = Date.now()
-        } catch (_) {
-            body.replaceChildren(node('p', 'aurora-mini-meta',
-                'Δεν είναι διαθέσιμα τα δεδομένα. Δοκίμασε αργότερα.'))
-            if (selected === 'markets' || selected === 'energy' || selected === 'news') {
-                body.appendChild(action('Ξανά ↻', () => { void loadFeed(true) }))
+            if (!response.ok) throw new Error('Feed unavailable')
+            const payload = (await response.json()) as AuroraPayload
+            if (!Array.isArray(payload.news) || !Array.isArray(payload.markets) || !Array.isArray(payload.energy)) {
+                throw new Error('Invalid feed')
             }
+            data = payload
+        } catch (_) {
+            // Unavailable source -> neutral empty state. Never pretend historical values are live.
         } finally {
             loading = false
-            if (data && !content.hidden) render()
+            render()
         }
     }
 
-    refreshHeader()
+    select('quote')
+    // A single, quiet rotation in the SAME quote location. Hover, focus or clicking pauses it.
     window.setInterval(() => {
-        refreshHeader()
-        if (!content.hidden && !document.hidden) {
-            if (selected === 'today' || selected === 'holidays') render()
-            if (selected === 'markets' || selected === 'energy' || selected === 'news') void loadFeed()
-        }
-    }, 15 * 60 * 1000)
+        if (document.hidden || hasPointerHover() || Date.now() - interactedAt < 90_000 ||
+            quotesContainer.classList.contains('hidden')) return
+        const index = slides.findIndex((slide) => slide.key === active)
+        select(slides[(index + 1) % slides.length].key)
+    }, 18_000)
 }
