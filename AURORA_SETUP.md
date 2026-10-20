@@ -3,6 +3,33 @@
 This is a **personal fork** of [Bonjourr](https://github.com/victrme/Bonjourr).
 The upstream minimalist new-tab extension is preserved; the additional Aurora Desk is enabled **only on HTTP/HTTPS web deployments**.
 
+
+## Compact UI (2026-10-20)
+
+Aurora Mini Desk is deliberately **collapsed by default**. It appears only as a small
+glass bar at the **bottom-left**, showing the next Greek calendar holiday countdown.
+Click the bar to reveal the compact panel (max 360px wide).
+
+Tabs:
+- Today: next holidays + a rotating curated Vibe Coding idea.
+- Holidays: Greek holiday countdowns, including Orthodox Easter-based dates,
+  and personal dates stored only in the current browser.
+- Vibe Lab: 12 curated project ideas with difficulty, idea rotation,
+  local favorites and a copyable development brief.
+- Markets / Energy / News: existing timestamped public feeds, lazy-loaded when opened.
+
+All existing Bonjourr layout elements (background, clock, weather, quick links,
+quotes, search box, settings) retain their **upstream styles and positions**.
+This is a web-only overlay and does **not** change the installed Chrome extension.
+
+The holiday feature is a calendar/countdown, not a determination of whether a
+particular holiday is legally non-working for a given employee or industry.
+
+Deployment note: Vercel daily deployment limits may block pushing the latest
+branch until the quota resets; the GitHub branch may be newer than the current
+public deployment. A prior READY deployment is not evidence that latest commits
+are live.
+
 ## Features
 
 - Manrope typography, enhanced readability, cyan/mint/amber/lilac Aurora palette
