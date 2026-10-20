@@ -1,376 +1,193 @@
-/* Aurora Mini Desk — a small optional glass drawer.
-   Intentionally leaves every upstream Bonjourr element and layout untouched. */
+/* Aurora Inside Quotes — no floating panels, no changes to Bonjourr layout.
+   Uses the exact original #quotes_container location under the quick links. */
 
-#aurora-board {
-    --aurora-ice: #d7f5ff;
-    --aurora-mint: #a3efd5;
-    --aurora-amber: #ffd29d;
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 50;
-    width: min(360px, calc(100vw - 32px));
+#quotes_container.aurora-ready {
+    position: relative;
+    min-height: 77px;
     box-sizing: border-box;
-    border: 1px solid rgb(255 255 255 / .22);
-    border-radius: 17px;
-    background: rgb(13 23 37 / .82);
-    box-shadow: 0 10px 28px rgb(0 0 0 / .22);
-    backdrop-filter: blur(16px) saturate(120%);
-    -webkit-backdrop-filter: blur(16px) saturate(120%);
-    color: #f5f8fc;
-    text-align: left;
-    text-shadow: none;
-    font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif;
-    font-size: 14px;
-    line-height: 1.45;
+    padding: 8px 12px 22px;
     isolation: isolate;
     overflow: hidden;
 }
 
-#aurora-board *,
-#aurora-board *::before,
-#aurora-board *::after {
-    box-sizing: border-box;
-}
-
-#aurora-board button,
-#aurora-board input {
-    font: inherit;
-}
-
-#aurora-board a {
-    color: var(--aurora-ice);
-    text-decoration: none;
-}
-
-#aurora-board a:hover {
-    text-decoration: underline;
-}
-
-#aurora-board button:focus-visible,
-#aurora-board a:focus-visible,
-#aurora-board input:focus-visible {
-    outline: 2px solid #73d9fa;
-    outline-offset: 2px;
-}
-
-#aurora-board .aurora-mini-header {
-    width: 100%;
-}
-
-#aurora-board .aurora-mini-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 9px;
-    width: 100%;
-    min-height: 48px;
-    padding: 10px 13px;
-    color: #fff;
-    background: transparent;
-    border: 0;
-    text-align: left;
-    cursor: pointer;
-}
-
-#aurora-board .aurora-mini-toggle:hover {
-    background: rgb(255 255 255 / .065);
-}
-
-#aurora-board .aurora-mini-logo {
-    flex: 0 0 auto;
-    color: #97e7ff;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: .055em;
-}
-
-#aurora-board .aurora-mini-hint {
-    min-width: 0;
+#quotes_container.aurora-ready #quote {
+    margin: 0 auto 4px;
+    max-width: 100%;
+    max-height: 3.2em;
     overflow: hidden;
-    white-space: nowrap;
+    line-height: 1.38;
+    font-size: clamp(12px, 1.15vw, 16px);
+    font-weight: 650;
     text-overflow: ellipsis;
-    color: #c7d1dc;
-    font-size: 11px;
+}
+
+#quotes_container.aurora-ready #author {
+    margin: 0;
+    font-size: clamp(10px, .9vw, 12px);
     font-weight: 650;
 }
 
-#aurora-board .aurora-mini-chevron {
-    display: inline-block;
-    color: #a3efd5;
-    font-size: 19px;
-    transform: rotate(0deg);
-    transition: transform .2s ease;
+#quotes_container.aurora-ready:not([data-aurora-view='quote']) #quote,
+#quotes_container.aurora-ready:not([data-aurora-view='quote']) #author {
+    display: none;
 }
 
-#aurora-board .aurora-mini-toggle[aria-expanded='true'] .aurora-mini-chevron {
-    transform: rotate(180deg);
+/* The information replaces quote content INSIDE that same box. */
+#aurora-board.aurora-inline {
+    display: none;
+    position: absolute;
+    top: 5px;
+    bottom: 22px;
+    inset-inline: 10px;
+    z-index: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: #f8fbff;
+    font: 600 13px/1.3 'Manrope', 'Segoe UI', system-ui, sans-serif;
+    text-align: center;
+    text-shadow: 0 1px 8px rgb(0 0 0 / .55);
 }
 
-#aurora-board .aurora-mini-content[hidden] {
-    display: none !important;
-}
-
-#aurora-board .aurora-mini-content {
-    border-top: 1px solid rgb(255 255 255 / .12);
-}
-
-#aurora-board .aurora-mini-tabs {
+#quotes_container.aurora-ready:not([data-aurora-view='quote']) #aurora-board {
     display: flex;
-    gap: 4px;
-    overflow-x: auto;
-    padding: 10px 11px 9px;
-    scrollbar-width: thin;
-    scrollbar-color: #577589 transparent;
 }
 
-#aurora-board .aurora-mini-tab {
-    flex: 0 0 auto;
-    padding: 6px 10px;
-    border: 1px solid transparent;
-    border-radius: 9px;
-    background: rgb(255 255 255 / .075);
-    color: #d2dfed;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 750;
-}
-
-#aurora-board .aurora-mini-tab.active {
-    border-color: rgb(117 220 255 / .3);
-    color: #95e6ff;
-    background: rgb(67 187 224 / .18);
-}
-
-#aurora-board .aurora-mini-body {
-    max-height: min(350px, 47vh);
-    padding: 5px 13px 12px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #4e6f86 transparent;
-}
-
-#aurora-board .aurora-mini-footer {
-    padding: 8px 13px;
-    border-top: 1px solid rgb(255 255 255 / .09);
-    color: #aab9c9;
-    font-size: 10px;
-}
-
-#aurora-board .aurora-mini-section-title {
-    margin: 11px 0 7px;
-    font-size: 13px;
-    color: #f1f6fb;
-    font-weight: 800;
-}
-
-#aurora-board .aurora-mini-list {
+#aurora-board .aurora-inline-inner {
     display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
     flex-direction: column;
-    gap: 5px;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
 }
 
-#aurora-board .aurora-countdown {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: 8px;
-    padding: 9px 10px;
-    border-radius: 10px;
-    background: rgb(255 255 255 / .055);
-}
-
-#aurora-board .aurora-countdown-title {
-    flex: 1 1 120px;
-    min-width: 0;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-#aurora-board .aurora-countdown-days {
-    flex: 0 0 auto;
-    color: var(--aurora-mint);
-    font-size: 12px;
-    font-weight: 800;
-}
-
-#aurora-board .aurora-countdown .aurora-mini-meta {
-    flex: 1 0 100%;
-}
-
-#aurora-board .aurora-mini-meta {
+#aurora-board .aurora-inline-primary {
     display: block;
-    margin: 4px 0;
-    color: #aab9c9;
-    font-size: 11px;
-    line-height: 1.4;
-}
-
-#aurora-board .aurora-remove {
-    border: 0;
-    border-radius: 7px;
-    background: rgb(255 255 255 / .08);
-    color: #ffb7bc;
-    cursor: pointer;
-    font-size: 15px;
-}
-
-#aurora-board .aurora-date-form {
-    display: grid;
-    grid-template-columns: 1fr 118px;
-    gap: 6px;
-    margin-top: 12px;
-}
-
-#aurora-board .aurora-date-form input {
-    min-width: 0;
     width: 100%;
-    padding: 8px;
-    border: 1px solid rgb(255 255 255 / .2);
-    border-radius: 9px;
-    color: #fff;
-    background: rgb(255 255 255 / .08);
-    font-size: 11px;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #f6fbff;
+    font-size: clamp(12px, 1.12vw, 15px);
+    line-height: 1.35;
+    font-weight: 800;
+    text-decoration: none;
 }
 
-#aurora-board .aurora-date-form input[type='date'] {
-    color-scheme: dark;
+#aurora-board a.aurora-inline-primary:hover {
+    color: #9fe9ff;
+    text-decoration: underline;
 }
 
-#aurora-board .aurora-date-form button {
-    grid-column: 1 / -1;
-}
-
-#aurora-board .aurora-idea {
-    padding: 11px;
-    border: 1px solid rgb(255 255 255 / .10);
-    border-radius: 12px;
-    background: rgb(255 255 255 / .055);
-}
-
-#aurora-board .aurora-idea-topic {
+#aurora-board .aurora-inline-secondary {
     display: block;
-    margin-bottom: 3px;
-    color: var(--aurora-amber);
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #bed0df;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+#aurora-board .aurora-inline-action {
+    flex: 0 0 auto;
+    border: 1px solid rgb(185 224 255 / .2);
+    border-radius: 7px;
+    padding: 4px 6px;
+    background: rgb(62 96 123 / .32);
+    color: #b0edff;
     font-size: 10px;
-    font-weight: 800;
-}
-
-#aurora-board .aurora-idea-name {
-    display: block;
-    color: #f7fbff;
-    font-size: 15px;
-    font-weight: 800;
-}
-
-#aurora-board .aurora-idea-desc {
-    margin: 6px 0 10px;
-    color: #c9d6e4;
-    font-size: 12px;
-    line-height: 1.5;
-}
-
-#aurora-board .aurora-idea-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-}
-
-#aurora-board .aurora-btn,
-#aurora-board .aurora-date-form button,
-#aurora-board .aurora-refresh {
-    padding: 7px 9px;
-    border: 1px solid rgb(166 223 255 / .18);
-    border-radius: 9px;
-    background: rgb(255 255 255 / .09);
-    color: var(--aurora-ice);
+    font-weight: 750;
+    line-height: 1.1;
     cursor: pointer;
-    font-size: 11px;
-    font-weight: 750;
+    white-space: nowrap;
+    box-shadow: none;
 }
 
-#aurora-board .aurora-btn:hover,
-#aurora-board .aurora-date-form button:hover {
-    background: rgb(255 255 255 / .16);
+#aurora-board .aurora-inline-action:hover {
+    color: white;
+    background: rgb(91 163 205 / .38);
 }
 
-#aurora-board .aurora-quote {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 3px 7px;
-    align-items: baseline;
-    padding: 9px 3px;
-    border-bottom: 1px solid rgb(255 255 255 / .11);
+/* Micro-navigation inside the quote card, never a separate section. */
+#quotes_container #aurora-board + .aurora-switcher {
+    position: absolute;
+    bottom: 3px;
+    inset-inline: 5px;
+    z-index: 2;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(2px, .4vw, 5px);
+    height: 17px;
+    max-width: calc(100% - 10px);
+    margin: auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+    text-shadow: none;
 }
 
-#aurora-board .aurora-quote-name {
-    font-size: 12px;
-    font-weight: 700;
+#quotes_container .aurora-switcher::-webkit-scrollbar {
+    display: none;
 }
 
-#aurora-board .aurora-quote-value {
-    font-size: 13px;
-    font-weight: 800;
-    color: var(--aurora-ice);
+#quotes_container .aurora-switch {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 5px;
+    padding: 2px clamp(3px, .5vw, 7px);
+    color: #d4dce6;
+    background: transparent;
+    font: 650 clamp(9px, .75vw, 11px)/1.1 'Manrope', 'Segoe UI', system-ui, sans-serif;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
 }
 
-#aurora-board .aurora-mini-change {
-    grid-column: 2;
-    text-align: right;
-    color: #bdc9d5;
-    font-size: 11px;
-    font-weight: 750;
+#quotes_container .aurora-switch.active {
+    color: #a0e9ff;
+    background: rgb(96 188 225 / .18);
 }
 
-#aurora-board .aurora-mini-change[data-direction='up'] {
-    color: var(--aurora-mint);
+#quotes_container .aurora-switch:hover {
+    color: white;
+    background: rgb(255 255 255 / .13);
 }
 
-#aurora-board .aurora-mini-change[data-direction='down'] {
-    color: #ffadb2;
+#quotes_container .aurora-switch:focus-visible,
+#aurora-board .aurora-inline-action:focus-visible,
+#aurora-board a:focus-visible {
+    outline: 2px solid #80e3ff;
+    outline-offset: 1px;
 }
 
-#aurora-board .aurora-quote .aurora-mini-meta {
-    grid-column: 1;
-    margin: 0;
-}
-
-#aurora-board .aurora-quote a {
-    grid-column: 2;
-    font-size: 11px;
-}
-
-#aurora-board .aurora-news-link {
-    display: block;
-    padding: 10px 2px;
-    border-bottom: 1px solid rgb(255 255 255 / .11);
-}
-
-#aurora-board .aurora-news-title {
-    display: block;
-    font-size: 12px;
-    line-height: 1.45;
-    font-weight: 700;
-}
-
-#aurora-board .aurora-refresh {
-    margin-top: 9px;
-}
-
-@media (max-width: 520px) {
-    #aurora-board {
-        bottom: 12px;
-        left: 12px;
-        width: min(340px, calc(100vw - 24px));
+@media (max-width: 600px) {
+    #quotes_container.aurora-ready {
+        min-width: min(20em, calc(100vw - 24px));
+        padding-inline: 7px;
     }
 
-    #aurora-board .aurora-mini-body {
-        max-height: min(290px, 42vh);
+    #aurora-board.aurora-inline {
+        inset-inline: 6px;
+    }
+
+    #aurora-board .aurora-inline-secondary {
+        font-size: 10px;
+    }
+
+    #quotes_container .aurora-switcher {
+        justify-content: start;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    #aurora-board .aurora-mini-chevron {
+    #quotes_container .aurora-switch {
         transition: none;
     }
 }
