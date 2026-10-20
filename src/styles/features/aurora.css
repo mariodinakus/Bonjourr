@@ -1,0 +1,193 @@
+/* Aurora Inside Quotes — no floating panels, no changes to Bonjourr layout.
+   Uses the exact original #quotes_container location under the quick links. */
+
+#quotes_container.aurora-ready {
+    position: relative;
+    min-height: 77px;
+    box-sizing: border-box;
+    padding: 8px 12px 22px;
+    isolation: isolate;
+    overflow: hidden;
+}
+
+#quotes_container.aurora-ready #quote {
+    margin: 0 auto 4px;
+    max-width: 100%;
+    max-height: 3.2em;
+    overflow: hidden;
+    line-height: 1.38;
+    font-size: clamp(12px, 1.15vw, 16px);
+    font-weight: 650;
+    text-overflow: ellipsis;
+}
+
+#quotes_container.aurora-ready #author {
+    margin: 0;
+    font-size: clamp(10px, .9vw, 12px);
+    font-weight: 650;
+}
+
+#quotes_container.aurora-ready:not([data-aurora-view='quote']) #quote,
+#quotes_container.aurora-ready:not([data-aurora-view='quote']) #author {
+    display: none;
+}
+
+/* The information replaces quote content INSIDE that same box. */
+#aurora-board.aurora-inline {
+    display: none;
+    position: absolute;
+    top: 5px;
+    bottom: 22px;
+    inset-inline: 10px;
+    z-index: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: #f8fbff;
+    font: 600 13px/1.3 'Manrope', 'Segoe UI', system-ui, sans-serif;
+    text-align: center;
+    text-shadow: 0 1px 8px rgb(0 0 0 / .55);
+}
+
+#quotes_container.aurora-ready:not([data-aurora-view='quote']) #aurora-board {
+    display: flex;
+}
+
+#aurora-board .aurora-inline-inner {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+}
+
+#aurora-board .aurora-inline-primary {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #f6fbff;
+    font-size: clamp(12px, 1.12vw, 15px);
+    line-height: 1.35;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+#aurora-board a.aurora-inline-primary:hover {
+    color: #9fe9ff;
+    text-decoration: underline;
+}
+
+#aurora-board .aurora-inline-secondary {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #bed0df;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+#aurora-board .aurora-inline-action {
+    flex: 0 0 auto;
+    border: 1px solid rgb(185 224 255 / .2);
+    border-radius: 7px;
+    padding: 4px 6px;
+    background: rgb(62 96 123 / .32);
+    color: #b0edff;
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1.1;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: none;
+}
+
+#aurora-board .aurora-inline-action:hover {
+    color: white;
+    background: rgb(91 163 205 / .38);
+}
+
+/* Micro-navigation inside the quote card, never a separate section. */
+#quotes_container #aurora-board + .aurora-switcher {
+    position: absolute;
+    bottom: 3px;
+    inset-inline: 5px;
+    z-index: 2;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(2px, .4vw, 5px);
+    height: 17px;
+    max-width: calc(100% - 10px);
+    margin: auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+    text-shadow: none;
+}
+
+#quotes_container .aurora-switcher::-webkit-scrollbar {
+    display: none;
+}
+
+#quotes_container .aurora-switch {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 5px;
+    padding: 2px clamp(3px, .5vw, 7px);
+    color: #d4dce6;
+    background: transparent;
+    font: 650 clamp(9px, .75vw, 11px)/1.1 'Manrope', 'Segoe UI', system-ui, sans-serif;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+}
+
+#quotes_container .aurora-switch.active {
+    color: #a0e9ff;
+    background: rgb(96 188 225 / .18);
+}
+
+#quotes_container .aurora-switch:hover {
+    color: white;
+    background: rgb(255 255 255 / .13);
+}
+
+#quotes_container .aurora-switch:focus-visible,
+#aurora-board .aurora-inline-action:focus-visible,
+#aurora-board a:focus-visible {
+    outline: 2px solid #80e3ff;
+    outline-offset: 1px;
+}
+
+@media (max-width: 600px) {
+    #quotes_container.aurora-ready {
+        min-width: min(20em, calc(100vw - 24px));
+        padding-inline: 7px;
+    }
+
+    #aurora-board.aurora-inline {
+        inset-inline: 6px;
+    }
+
+    #aurora-board .aurora-inline-secondary {
+        font-size: 10px;
+    }
+
+    #quotes_container .aurora-switcher {
+        justify-content: start;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #quotes_container .aurora-switch {
+        transition: none;
+    }
+}

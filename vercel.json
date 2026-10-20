@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "buildCommand": "export DENO_INSTALL=\"$PWD/.deno\" && curl -fsSL https://deno.land/install.sh | sh && \"$DENO_INSTALL/bin/deno\" run --allow-all ./tasks/build.ts online prod",
+  "outputDirectory": "release/online",
+  "functions": {
+    "api/aurora.js": {
+      "maxDuration": 10
+    }
+  }
+}
