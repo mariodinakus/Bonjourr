@@ -7,6 +7,7 @@ import { moveElements } from './features/move/index.ts'
 import { hideElements } from './features/hide.ts'
 import { customFont } from './features/fonts.ts'
 import { quickLinks } from './features/links/index.ts'
+import { auroraDashboard } from './features/aurora.ts'
 import { searchbar } from './features/searchbar.ts'
 import { customCss } from './features/css.ts'
 import { weather } from './features/weather/index.ts'
@@ -88,6 +89,7 @@ async function startup(): Promise<void> {
     hideElements(sync.hide)
     backgroundsInit(sync, local, true)
     quickLinks({ sync, local })
+    auroraDashboard()
     synchronization(local)
     settingsInit(sync, local)
     pageControl({ width: sync.pagewidth, gap: sync.pagegap })
