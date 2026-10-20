@@ -4,36 +4,30 @@ This is a **personal fork** of [Bonjourr](https://github.com/victrme/Bonjourr).
 The upstream minimalist new-tab extension is preserved; the additional Aurora Desk is enabled **only on HTTP/HTTPS web deployments**.
 
 
-## Compact UI (2026-10-20)
+## Integrated quote ticker (2026-10-20)
 
-Aurora Mini Desk is deliberately **collapsed by default**. It appears only as a small
-glass bar at the **bottom-left**, showing the next Greek calendar holiday countdown.
-Click the bar to reveal the compact panel (max 360px wide).
+**No separate dashboard, no floating panels, no extra columns.**
 
-Tabs:
-- Today: next holidays + a rotating curated Vibe Coding idea.
-- Holidays: Greek holiday countdowns, including Orthodox Easter-based dates,
-  and personal dates stored only in the current browser.
-- Vibe Lab: 12 curated project ideas with difficulty, idea rotation,
-  local favorites and a copyable development brief.
-- Markets / Energy / News: existing timestamped public feeds, lazy-loaded when opened.
+The original `#quotes_container` remains in precisely the same location below Bonjourr's quick links. It still displays upstream quotes, with its original quote engine and author. A small navigation row INSIDE the same quote card can switch the content:
 
-All existing Bonjourr layout elements (background, clock, weather, quick links,
-quotes, search box, settings) retain their **upstream styles and positions**.
-This is a web-only overlay and does **not** change the installed Chrome extension.
+- **Γνωμικό** — the actual Bonjourr quote, unchanged in functionality.
+- **Αργίες** — countdown to next Greek calendar holiday and optional local personal date.
+- **Vibe idea** — one of 12 curated coding ideas, with next idea, local favorite and copy brief.
+- **Ειδήσεις** — linked source headline (when available).
+- **Αγορές** / **Ενέργεια** — dated historical observations (not live quotes).
 
-The holiday feature is a calendar/countdown, not a determination of whether a
-particular holiday is legally non-working for a given employee or industry.
+Rotation occurs every ~18 seconds when the user is not interacting. Hover, keyboard focus or selection pauses it, and clicking a category lets the user read it. The original full-screen photo, clock, weather, search and links **keep their native positions**.
 
-Deployment note: Vercel daily deployment limits may block pushing the latest
-branch until the quota resets; the GitHub branch may be newer than the current
-public deployment. A prior READY deployment is not evidence that latest commits
-are live.
+The ticker appears on web deployments only; it is not a change to the installed Chrome extension. The quotes widget must be enabled in Bonjourr settings for the ticker to be visible.
+
+A Greek calendar holiday is not necessarily a mandatory day off in every industry or workplace.
+
+Deployment note: Vercel deployment quotas may block rebuilding the latest commit. A previous READY build is not evidence that the newest GitHub changes are live.
 
 ## Features
 
-- Manrope typography, enhanced readability, cyan/mint/amber/lilac Aurora palette
-- Expandable, accessible news, daily-market-close, and energy observation panels
+- Manrope inside the compact information ticker, with subtle cyan highlights
+- Category selection inside the pre-existing quote widget, without another panel
 - News metadata and original source links via Google News RSS
 - S&P 500, Nasdaq 100, and DAX **historical daily closes** via Stooq (subject to availability)
 - Brent and WTI **historical daily observations** via FRED/EIA (subject to availability)
@@ -68,6 +62,6 @@ deno run --allow-all ./tasks/build.ts online prod
 ### Deployment/access troubleshooting
 
 - If Vercel reports **READY** but the preview URL asks for Vercel authentication, inspect Deployment Protection settings of the **new** project.
-- If tiles say unavailable, visit \`/api/aurora\` and check the \`markets\`, \`energy\`, and \`news\` arrays. Public providers may refuse the request.
+- If categories say unavailable, visit \`/api/aurora\` and check the \`markets\`, \`energy\`, and \`news\` arrays. Public providers may refuse the request.
 - Changing the original Bonjourr extension's settings, custom CSS, or GitHub Gist is **not** required.
 - Hosting a webpage does **not** automatically replace Chrome's New Tab; that needs a new-tab redirect/extension after the page works.
