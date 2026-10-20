@@ -15,7 +15,7 @@ async function getText(url) {
 
 function xmlText(block, tag) {
     const pattern = new RegExp('<' + tag + '(?:\\s[^>]*)?>([\\s\\S]*?)<\\/' + tag + '>', 'i');
-    return (block.match(pattern)?.[1] || '').replace(/^<!\\[CDATA\\[|\\]\\]>$/g, '').trim();
+    return (block.match(pattern)?.[1] || '').replace(/^<!\[CDATA\[|\]\]>$/g, '').trim();
 }
 
 function decodeEntities(value) {
@@ -36,7 +36,7 @@ async function loadNews() {
         const url = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query)
             + '&hl=el&gl=GR&ceid=GR:el';
         const xml = await getText(url);
-        const blocks = xml.match(/<item>[^]*?<\\/item>/gi) || [];
+        const blocks = xml.match(/<item>[\s\S]*?<\/item>/gi) || [];
         return blocks.slice(0, 3).map((block) => {
             const source = decodeEntities(xmlText(block, 'source'));
             const rawTitle = decodeEntities(xmlText(block, 'title'));
@@ -66,10 +66,10 @@ async function loadMarket(name, symbol) {
     const url = 'https://stooq.com/q/d/l/?s=' + encodeURIComponent(symbol)
         + '&i=d&d1=' + utcDay(start) + '&d2=' + utcDay(new Date());
     const csv = await getText(url);
-    const rows = csv.trim().split(/\\r?\\n/).slice(1).map((line) => {
+    const rows = csv.trim().split(/\r?\n/).slice(1).map((line) => {
         const [date, , , , close] = line.split(',');
         return { date, close: Number(close) };
-    }).filter((row) => /^\\d{4}-\\d{2}-\\d{2}$/.test(row.date) && row.close > 0);
+    }).filter((row) => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && row.close > 0);
     if (!rows.length) throw new Error('No market observations');
     const current = rows[rows.length - 1];
     const previous = rows.length > 1 ? rows[rows.length - 2] : null;
@@ -90,10 +90,10 @@ async function loadEnergy(name, fredSeries) {
     const url = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id='
         + encodeURIComponent(fredSeries) + '&cosd=' + from;
     const csv = await getText(url);
-    const rows = csv.trim().split(/\\r?\\n/).slice(1).map((line) => {
+    const rows = csv.trim().split(/\r?\n/).slice(1).map((line) => {
         const [date, value] = line.split(',');
         return { date, value: Number(value) };
-    }).filter((row) => /^\\d{4}-\\d{2}-\\d{2}$/.test(row.date) && row.value > 0);
+    }).filter((row) => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && row.value > 0);
     if (!rows.length) throw new Error('No energy observations');
     const current = rows[rows.length - 1];
     return {
