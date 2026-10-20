@@ -497,7 +497,9 @@ export function auroraDashboard(): void {
             return
         }
         if (selected === 'markets') showQuotes(data.markets)
-        if (selected === 'energy') showQuotes([...data.energy, data.electricity])
+        if (selected === 'energy') showQuotes([...data.energy, data.electricity || {
+            name: 'Ελληνική αγορά ηλεκτρισμού', value: null, error: 'Πηγή μη διαθέσιμη',
+        }])
         if (selected === 'news') showNews(data.news)
         const refresh = action('Ανανέωση ↻', () => { void loadFeed(true) })
         refresh.classList.add('aurora-refresh')
