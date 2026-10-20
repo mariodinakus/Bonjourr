@@ -1,8 +1,6 @@
 // Aurora Mini Desk — optional, compact overlay for the Bonjourr web edition.
 // Bonjourr's original grid, clock, photo, weather, search and links are untouched.
 
-type AuroraTab = 'today' | 'holidays' | 'ideas' | 'markets' | 'energy' | 'news'
-
 interface AuroraQuote {
     name: string
     value: number | null
@@ -133,15 +131,6 @@ const IDEAS: ProjectIdea[] = [
         description: 'Κρατά προβλέψεις, πιθανότητες και αργότερα ελέγχει την ακρίβειά τους.',
         prompt: 'Build Decision Journal: local-first prediction entries with probability and resolution criteria, Brier score, calibration plots, date-stamped outcomes and exportable history.',
     },
-]
-
-const TABS: { key: AuroraTab; label: string }[] = [
-    { key: 'today', label: 'Σήμερα' },
-    { key: 'holidays', label: 'Αργίες' },
-    { key: 'ideas', label: 'Vibe Lab' },
-    { key: 'markets', label: 'Αγορές' },
-    { key: 'energy', label: 'Ενέργεια' },
-    { key: 'news', label: 'Ειδήσεις' },
 ]
 
 function athensToday(): string {
@@ -379,9 +368,16 @@ export function auroraDashboard(): void {
 
     function showIdea(): void {
         const idea = IDEAS[currentIdea % IDEAS.length]
-        addLine('✦ ' + idea.name, idea.description + ' · ' + idea.difficulty)
+        addLine('✦ ' + idea.name, idea.area + ' · ' + idea.description + ' · ' + idea.difficulty)
         addInlineButton('↻', () => {
             currentIdea += 1
+            render()
+        })
+        addInlineButton(readFavorites().includes(idea.name) ? '★' : '☆', () => {
+            const favorites = readFavorites()
+            saveFavorites(favorites.includes(idea.name)
+                ? favorites.filter((name) => name !== idea.name)
+                : [...favorites, idea.name])
             render()
         })
         addInlineButton('Brief ↗', () => {
