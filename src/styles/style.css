@@ -50,5 +50,8 @@
 @import './features/csseditor.css';
 @import './features/supporters.css';
 
-/* <!> Responsive must be imported last */
+/* Bonjourr responsive defaults */
 @import './_responsive.css';
+
+/* Aurora custom theme must follow the upstream responsive defaults */
+@import './features/aurora.css';
