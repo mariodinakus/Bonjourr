@@ -54,7 +54,7 @@ export async function requestNewWeather(data: Weather, lastWeather?: LastWeather
     }
 
     if (data.geolocation === 'off' && !coords) {
-        const city = data.city ?? 'Paris'
+        const city = data.city ?? 'Thessaloniki'
         const q = encodeURIComponent(city)
         url.searchParams.set('query', q)
     }
