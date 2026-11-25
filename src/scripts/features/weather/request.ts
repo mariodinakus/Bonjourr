@@ -20,9 +20,9 @@ export async function weatherCacheControl(data: Weather, lastWeather?: LastWeath
 
     const now = Date.now()
     const last = lastWeather?.timestamp ?? 0
-    const isAnHourLater = now > last + 3600000
+    const isStale = now > last + 900000
 
-    if (navigator.onLine && isAnHourLater) {
+    if (navigator.onLine && isStale) {
         const newWeather = await requestNewWeather(data, lastWeather)
 
         if (newWeather) {
@@ -55,8 +55,7 @@ export async function requestNewWeather(data: Weather, lastWeather?: LastWeather
 
     if (data.geolocation === 'off' && !coords) {
         const city = data.city ?? 'Thessaloniki'
-        const q = encodeURIComponent(city)
-        url.searchParams.set('query', q)
+        url.searchParams.set('query', city)
     }
 
     const response = await fetch(url)
