@@ -14,6 +14,7 @@ import { quotes } from './features/quotes.ts'
 import { pomodoro } from './features/pomodoro.ts'
 import { notes } from './features/notes.ts'
 import { clock } from './features/clock/index.ts'
+import { mono } from './features/mono.ts'
 import './features/contextmenu.ts'
 
 import { displayInterface, onInterfaceDisplay } from './shared/display.ts'
@@ -78,6 +79,7 @@ async function startup(): Promise<void> {
     favicon(sync.favicon)
     tabTitle(sync.tabtitle)
     clock(sync)
+    mono(sync, local.lastWeather)
     darkmode(sync.dark)
     searchbar(sync.searchbar)
     quotes({ sync, local })
